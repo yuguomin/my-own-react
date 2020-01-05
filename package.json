@@ -1,0 +1,13 @@
+{
+  "name": "my-own-react",
+  "version": "1.0.0",
+  "description": "create my own react",
+  "main": "./dist/index.js",
+  "repository": "https://github.com/yuguomin/my-own-react.git",
+  "author": "super fish",
+  "license": "MIT",
+  "scripts": {
+    "dev": "tsc -w",
+    "build": "rm -rf ./dist && tsc"
+  }
+}
