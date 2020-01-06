@@ -7,10 +7,10 @@ import { EVENT_LISTENER_START, TEXT_ELEMENT_TYPE } from './contants/SpecialChars
  * 2. 递归的把传进来的 fishtail 元素创建成真实的 DOM tree，绑定每个元素的props中事件和属性
  * 3. 将 DOM tree 添加到 parentDom 中
  * @param { IFishtailElement } element 一个 fishtail 元素类型
- * @param { HTMLElement } parentDom 要渲染的目标 dom 元素
+ * @param { Element } parentDom 要渲染的目标 dom 元素
  * @return { undefined }
  */
-export const render = (element: IFishtailElement, parentDom: HTMLElement | Text) => {
+export const render = (element: IFishtailElement, parentDom: Element | Text) => {
   const { type, props } = element;
   const isTextELement = type === TEXT_ELEMENT_TYPE;
   // 判断是文本节点还是元素节点，对应生成
@@ -32,4 +32,4 @@ export const render = (element: IFishtailElement, parentDom: HTMLElement | Text)
   childrenELements.forEach((child) => render(child, dom));
   // 添加生成的 Dom tree 到根元素
   parentDom.appendChild(dom);
-}
+};
