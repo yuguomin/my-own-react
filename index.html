@@ -7,29 +7,28 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Document</title>
 </head>
-  <div id="root"></div>
-<body>
-  <script src="https://cdn.staticfile.org/babel-standalone/6.26.0/babel.min.js"></script>
-  <script data-main="./dist/fishtail-dom/createElement.js" src="https://cdn.bootcss.com/require.js/2.3.6/require.min.js">
-  // <!-- <script src="./dist/fishtail-dom/render.js"> -->
-  
-    </script>
-  <script type="text/babel" >
-  // console.log(element);
-/** @jsx Didact.createElement */
-// function Counter() {
-//   const [state, setState] = Didact.useState(1)
-//   return (
-//     <h1 onClick={() => setState(c => c + 1)}>
-//       Count: {state}
-//     </h1>
-//   )
-// }
-// const element = <Counter />
-// const container = document.getElementById("root")
-// Didact.render(element, container)
+<div id="root"></div>
 
-  </script>
+<body>
+   <script src="https://cdn.staticfile.org/babel-standalone/6.26.0/babel.min.js"></script>
+    <script src="./dist/bundle.cjs.js"></script>
+    <script type="text/babel">
+      /** @jsx Fishtail.createElement */
+      const rootDom = document.getElementById("root");
+      function tick() {
+        const rdn = Math.random() >= 0.5;
+        const time = new Date().toLocaleTimeString();
+        const clockElement = (<div>
+            <h1 title={time}></h1>
+            {rdn && <h2>Hello</h2>}
+          </div>);
+        Fishtail.render(clockElement, rootDom);
+      }
+
+      tick();
+      setInterval(tick, 1000);
+    </script>
+
 </body>
 
 </html>

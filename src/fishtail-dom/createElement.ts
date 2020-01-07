@@ -3,7 +3,7 @@ import { TEXT_ELEMENT_TYPE } from './contants/SpecialChars';
 
 /** 
  * @description
- * 相当于 React.createELement 方法
+ * 相当于 React.createElement 方法
  * 1. 该方法的目的是把 JSX 被编译的东西，利用该方法转换成一个 fishtail 元素
  * 2. 转换出的 fishtail 元素将可以在 render 中调用继而渲染到页面
  * @param { string } type 元素类型
@@ -12,7 +12,7 @@ import { TEXT_ELEMENT_TYPE } from './contants/SpecialChars';
  * @return { IFishtailElement } 一个 fishtail 元素
 */
 
-export const createELement:
+export const createElement:
   (type: string, config: IFishtailElementProps, ...childrenList: Array<IFishtailElement | string | null | false | undefined | number>)
     => IFishtailElement = (type, config, ...childrenList) => {
       const props = { ...config };
@@ -36,5 +36,5 @@ export const createELement:
  * @return { IFishtailElement } 最终也是返回一个 fishtaile 元素，不过是文案类型的
  */
 const createTextElement = (nodeValue: string | number) => {
-  return createELement(TEXT_ELEMENT_TYPE, { nodeValue });
+  return createElement(TEXT_ELEMENT_TYPE, { nodeValue });
 }
