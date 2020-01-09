@@ -3,6 +3,3 @@ yarn-error.log
 workspace
 .DS_STORE
 .vscode/*
-./index.html
-./src/main.tsx
-./lib

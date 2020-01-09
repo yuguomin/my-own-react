@@ -2,7 +2,7 @@ import typescript from "rollup-plugin-typescript";
 import sourceMaps from "rollup-plugin-sourcemaps";
 
 export default {
-  input: "./src/main.tsx",
+  input: "./src/fishtail@15/index.tsx",
   plugins: [
     typescript({
       exclude: "node_modules/**",
@@ -13,12 +13,12 @@ export default {
   output: [
     {
       format: "cjs",
-      file: "dist/bundle.cjs.js",
+      file: "dist/fishtail@15/bundle.cjs.js",
       sourcemap: true
     },
     {
       format: "es",
-      file: "dist/bundle.esm.js",
+      file: "dist/fishtail@15/bundle.esm.js",
       sourcemap: true
     }
   ]

@@ -10,17 +10,17 @@
 <div id="root"></div>
 
 <body>
-   <script src="https://cdn.staticfile.org/babel-standalone/6.26.0/babel.min.js"></script>
-    <script src="./dist/bundle.cjs.js"></script>
-    <script type="text/babel">
+  <script src="https://cdn.staticfile.org/babel-standalone/6.26.0/babel.min.js"></script>
+  <script src="./dist/fishtail@15/bundle.esm.js"></script>
+  <script type="text/babel">
       /** @jsx Fishtail.createElement */
       const rootDom = document.getElementById("root");
       function tick() {
         const rdn = Math.random() >= 0.5;
         const time = new Date().toLocaleTimeString();
-        const clockElement = (<div>
-            <h1 title={time}></h1>
-            {rdn && <h2>Hello</h2>}
+        const clockElement = (<div >
+            <h1>{time}</h1>
+            <div title={time}>打开控制台看看我有没有变化</div>
           </div>);
         Fishtail.render(clockElement, rootDom);
       }
@@ -28,7 +28,6 @@
       tick();
       setInterval(tick, 1000);
     </script>
-
 </body>
 
 </html>

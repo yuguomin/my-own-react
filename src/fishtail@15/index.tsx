@@ -1,5 +1,5 @@
-import { render } from './fishtail-dom/render'
-import { createElement } from './fishtail-dom/createElement';
+import { render } from './render'
+import { createElement } from './createElement';
 
 const Fishtail = {
   render,

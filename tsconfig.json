@@ -62,7 +62,7 @@
   },
   "exclude": [
     "./dist",
-    "./index.html"
-    // "./node_modules"
+    "./index.html",
+    "./rollup.config.js"
   ]
 }

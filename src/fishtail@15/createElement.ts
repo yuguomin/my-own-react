@@ -16,16 +16,16 @@ export const createElement:
   (type: string, config: IFishtailElementProps, ...childrenList: Array<IFishtailElement | string | null | false | undefined | number>)
     => IFishtailElement = (type, config, ...childrenList) => {
       const props = { ...config };
-      const rawChlidren: IFishtailElement[] = [];
+      const finalChlidren: IFishtailElement[] = [];
       [...childrenList].forEach((children) => {
         if (children !== null && children !== false && children !== undefined) {
           if (!(children instanceof Object)) {
             children = createTextElement(children);
           }
-          rawChlidren.push(children);
+          finalChlidren.push(children);
         }
       });
-      props.children = rawChlidren;
+      props.children = finalChlidren;
       return { type, props }
     }
 
