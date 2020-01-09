@@ -1,48 +1,13 @@
 # my-own-react
+这个代码工具叫做Fishtail，实现了基本的React相关内容，分别为16版本之前和16版本之后，实现功能如下：
+1. render
+2. createElement
+3. VDOM
+4. diff
+5. component --- 正在添加中
+6. fiber --- 正在添加中
+7. hooks --- 正在添加中
 
-1. 实现基本的 Fishtail.Element 数据结构和 Fishtail.render 方法
-实际结构主要就是两部分组成，第一个是`type`，然后是`props`
+详细实现过程请参阅Blog：
+[简易React实现(1)——DOM渲染与更新](https://www.yuguomin.com/2020/01/07/create-my-own-react-1/)
 
-```TypeScript
-interface IFishtailElement {
-  type: string;
-  props: IProps;
-}
-interface IProps {
-  children?: IFishtailElement[];
-  [propName: string]: any;
-}
-```
-FishtailDOM.render 方法相当于 ReactDOM.render 方法，将最终的 DOM Tree 添加到目标节点中。
-
-
-2. 实现Fishtail.createElement方法，通过该方法，可以生成Fishtail需要的元素
-在编译JSX时，指定对应的JSX结构方法，即可使用。
-
-```JavaScript
-/** @jsx Fishtail.createElement */
-const element = (
-  <div id="container">
-    <input value="foo" type="text" />
-    <a href="/bar">bar</a>
-    <span onClick={e => alert("Hi")}>click me</span>
-  </div>
-);
-```
-会被如 babel 解析为
-```JavaScript
-/** @jsx Fishtail.createElement */
-const element = Fishtail.createElement("div", {
-  id: "container"
-}, Fishtail.createElement("input", {
-  value: "foo",
-  type: "text"
-}), Fishtail.createElement("a", {
-  href: "/bar"
-}, "bar"), Fishtail.createElement("span", {
-  onClick: e => alert("Hi")
-}, "click me"));
-```
-所以当接收到这个解析结果的参数后，通过该方法要得到一个完整的 Fishtail Root Element，需要注意对于 null undefined false的值不渲染，已经文本节点的生成。
-
-3. 实现VDom的效果，vdom
