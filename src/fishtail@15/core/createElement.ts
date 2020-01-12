@@ -1,5 +1,5 @@
-import { IFishtailElementProps, IFishtailElement } from './interface/IFishtailElement';
-import { TEXT_ELEMENT_TYPE } from './contants/SpecialChars';
+import { IFishtailElementProps, IFishtailElement } from '../interface/IFishtailElement';
+import { TEXT_ELEMENT_TYPE } from '../contants/SpecialChars';
 
 /** 
  * @description
@@ -11,13 +11,14 @@ import { TEXT_ELEMENT_TYPE } from './contants/SpecialChars';
  * @param { Array<IFishtailElement|string> } childrenList 子元素的列表
  * @return { IFishtailElement } 一个 fishtail 元素
 */
-
 export const createElement:
   (type: string, config: IFishtailElementProps, ...childrenList: Array<IFishtailElement | string | null | false | undefined | number>)
     => IFishtailElement = (type, config, ...childrenList) => {
       const props = { ...config };
       const finalChlidren: IFishtailElement[] = [];
-      [...childrenList].forEach((children) => {
+      // @ts-ignore
+      const rawChildren = [].concat(...childrenList);
+      rawChildren.forEach((children) => {
         if (children !== null && children !== false && children !== undefined) {
           if (!(children instanceof Object)) {
             children = createTextElement(children);
@@ -33,7 +34,7 @@ export const createElement:
  * @description
  * 当处理 JSX 时，遇到 text 文案类型时，需要特殊创建
  * @param { string | number } nodeValue 文案内容
- * @return { IFishtailElement } 最终也是返回一个 fishtaile 元素，不过是文案类型的
+ * @return { IFishtailElement } 最终也是返回一个文案类型的 fishtaile 元素
  */
 const createTextElement = (nodeValue: string | number) => {
   return createElement(TEXT_ELEMENT_TYPE, { nodeValue });

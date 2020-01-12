@@ -1,33 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Document</title>
+  <style>
+    div {
+      margin-bottom: 20px;
+    }
+  </style>
 </head>
-<div id="root"></div>
-
 <body>
+  <div id="root"></div>
+
   <script src="https://cdn.staticfile.org/babel-standalone/6.26.0/babel.min.js"></script>
   <script src="./dist/fishtail@15/bundle.esm.js"></script>
   <script type="text/babel">
-      /** @jsx Fishtail.createElement */
-      const rootDom = document.getElementById("root");
-      function tick() {
-        const rdn = Math.random() >= 0.5;
-        const time = new Date().toLocaleTimeString();
-        const clockElement = (<div >
-            <h1>{time}</h1>
-            <div title={time}>打开控制台看看我有没有变化</div>
-          </div>);
-        Fishtail.render(clockElement, rootDom);
-      }
+  /** @jsx Fishtail.createElement */
+  const posts = [
+    { name: "JavaScript Restore", url: "https://www.yuguomin.com/categories/JavaScript-Restore/" },
+    { name: "CSS Restore", url: "https://www.yuguomin.com/categories/CSS-Restore/" },
+    { name: "HTML Restore", url: "https://www.yuguomin.com/categories/HTML-Restore/" }
+  ];
+  class App extends Fishtail.Component {
+    constructor(props) {
+      super(props);
+      this.state = { count: 3, isShowList: true }
+      this.clickAdd = this.clickAdd.bind(this);
+      this.clickToggleListStatus = this.clickToggleListStatus.bind(this);
+    }
+    componentWillMount() {
+      console.log('App componentWillMount');
+    }
+    componentDidMount() {
+      console.log('App componentDidMount');
+    }
+    // shouldComponentUpdate() {
+    //   return false;
+    // }
+    componentWillUpdate() {
+      console.log(`App componentWillUpdate`);
+    }
+    componentDidUpdate() {
+      console.log(`App componentDidUpdate`);
+    }
+    clickAdd() {
+      this.setState({ count: this.state.count + 1 });
+    }
 
-      tick();
-      setInterval(tick, 1000);
-    </script>
+    clickToggleListStatus() {
+      this.setState({ isShowList: !this.state.isShowList });
+    }
+
+    render() {
+      return (
+        <div>
+          {<Title count={this.state.count} />}
+          <ul>
+            {this.state.isShowList ? this.props.posts.map((post, index) => {
+              return <Post index={index} name={post.name + this.state.count} url={post.url} />;
+            }) : null}
+          </ul>
+          <div onClick={this.clickAdd}>点击添加新类别</div>
+          <div onClick={this.clickToggleListStatus}>点击切换列表状态</div>
+        </div>
+      );
+    }
+  }
+
+  function Title(props) {
+    const { count } = props;
+    return (<h1>Super Fish's Blog, number of categories: {count}</h1>);
+  }
+
+  class Post extends Fishtail.Component {
+    constructor(props) {
+      super(props);
+      this.state = { likes: Math.ceil(Math.random() * 100) };
+    }
+    componentWillMount() {
+      console.log(`Post${this.props.index} componentWillMount`);
+    }
+    componentDidMount() {
+      console.log(`Post${this.props.index} componentDidMount`);
+    }
+    componentWillUpdate() {
+      console.log(`Post${this.props.index} componentWillUpdate`);
+    }
+    componentDidUpdate() {
+      console.log(`Post${this.props.index} componentDidUpdate`);
+    }
+    componentWillUnmount() {
+      console.log(`Post${this.props.index} componentWillUnmount`)
+    }
+    like() {
+      this.setState({
+        likes: this.state.likes + 1
+      });
+    }
+    render() {
+      const { name, url } = this.props;
+      const { likes } = this.state;
+      return (
+        <li>
+          <button onClick={e => this.like()}>{likes}<b>❤️</b></button>
+          <a href={url}>{name}</a>
+        </li>
+      );
+    }
+  }
+
+  Fishtail.render(<App posts={posts} />, document.getElementById('root'));
+  </script>
 </body>
 
 </html>

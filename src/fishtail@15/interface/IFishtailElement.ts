@@ -1,5 +1,7 @@
+import { IFishtailInstance } from './IFishtailInstance';
+
 export interface IFishtailElement {
-  type: string;
+  type: string | ((IFishtailElementProps) => IFishtailElement | void);
   props: IFishtailElementProps;
 }
 

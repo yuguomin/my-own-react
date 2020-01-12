@@ -3,70 +3,13 @@
 var EVENT_LISTENER_START = 'on';
 var TEXT_ELEMENT_TYPE = 'TEXT ELEMENT';
 
-// 保存最新的根节点Instance数据
-var rootInstance = null;
 /**
  * @description
- * 1. 相当于 ReactDOM.render 方法
- * 2. 递归的把传进来的 fishtail 元素创建成真实的 DOM tree，绑定每个元素的props中事件和属性
- * 3. 将 DOM tree 添加到 parentDom 中
- * @param { IFishtailElement } element 一个 fishtail 元素类型
- * @param { Element } parentDom 要渲染的目标 dom 元素
- * @return { undefined }
+ * 对比更新dom的属性和事件，核心是最终 dom 的属性要和 nextProps保持一致，但不要重复删除添加
+ * @param {Element | Text} 要更新的dom节点
+ * @param {IFishtailElementProps} 该节点之前的props数据
+ * @param {IFishtailElementProps} 该节点最新的props数据
  */
-var render = function (element, parentDom) {
-    var prevInstance = rootInstance;
-    var nextInstace = reconcile(parentDom, prevInstance, element);
-    // 记录最新的 根节点 实例
-    rootInstance = nextInstace;
-};
-// 根据不同情况协调两个 dom tree，并做不同方式的渲染
-var reconcile = function (parentDom, instance, element) {
-    if (instance === null || instance === undefined) {
-        if (element === undefined) {
-            return null;
-        } // <-------- 两个都没有就算了吧
-        // 新增节点，做添加
-        var newInstance = instantiate(element);
-        parentDom.appendChild(newInstance.dom);
-        return newInstance;
-    }
-    else if (element === undefined) {
-        // 当props.children较短时，element出现undefined实际上就是需要删除
-        parentDom.removeChild(instance.dom);
-        return null;
-    }
-    else if (instance.element.type === element.type) {
-        // 说明相同类型的type，可复用dom，继而修改原 dom 上的属性
-        updateDomProperties(instance.dom, instance.element.props, element.props);
-        instance.childInstances = reconcileChildren(instance, element);
-        // dom 已更新至最新，Fishtail element保持同步
-        instance.element = element;
-        return instance;
-    }
-    else {
-        // 两边不同，都存在，做替换
-        var newInstance = instantiate(element);
-        parentDom.replaceChild(newInstance.dom, instance.dom);
-        return newInstance;
-    }
-};
-// 将一个 fishtail 元素实例化成 fishtail instance 结构
-var instantiate = function (element) {
-    var type = element.type, props = element.props;
-    var isTextELement = type === TEXT_ELEMENT_TYPE;
-    var dom = isTextELement ? document.createTextNode('') : document.createElement(type);
-    // 抽离属性添加，加入对比层，供复用 dom 的场景下复用方法
-    updateDomProperties(dom, {}, props);
-    var childELements = props.children || [];
-    // 这里通过递归不断拿到下面每一层的 instance 结构，再通过后面的 append 操作生成出完整的 DOM 树
-    var childInstances = childELements.map(instantiate);
-    childInstances.forEach(function (childrenInstance) {
-        dom.appendChild(childrenInstance.dom);
-    });
-    return { element: element, dom: dom, childInstances: childInstances };
-};
-// 对比更新dom的属性和事件，核心是最终 dom 的属性要和 nextProps保持一致，但不要重复删除添加
 var updateDomProperties = function (dom, prevProps, nextProps) {
     var isNew = function (prev, next) { return function (key) {
         return prev[key] !== next[key];
@@ -96,8 +39,201 @@ var updateDomProperties = function (dom, prevProps, nextProps) {
         }
     });
 };
+
+/**
+ * @description
+ * 类组件的基础抽象类，实现基本的一些功能配置：
+ * 1. props和state绑定
+ * 2. setState更新状态
+ * 3. 定义render抽象类方法
+ */
+var Component = /** @class */ (function () {
+    function Component(props) {
+        this.props = {};
+        this.state = {};
+        this.props = props;
+        this.state = this.state;
+    }
+    Component.prototype.setState = function (modifieState) {
+        this.state = Object.assign(this.state, modifieState);
+        updateInstance(this.__internalInstance);
+    };
+    return Component;
+}());
+/**
+ * @description
+ * 调用组件实例生命周期的方法
+ * @param {instance} instance 组件实例数据
+ * @param {} lifecycleName 生命周期方法名
+ */
+var callClassComponentLifeCycle = function (instance, lifecycleName) {
+    if (instance && instance.publicInstance) {
+        if (instance.publicInstance[lifecycleName]) {
+            return instance.publicInstance[lifecycleName]();
+        }
+    }
+};
+/**
+ * @description
+ * 通过实例上的内部实例数据，调用协调更新组件显示
+ * @param {internalInstance} 组件内部实例数据
+ */
+var updateInstance = function (internalInstance) {
+    var parentDom = internalInstance.dom.parentNode;
+    var element = internalInstance.element;
+    reconcile(parentDom, internalInstance, element);
+};
+
+// import { IFishtailInstance } from "./interface/IFishtailInstance";
+/**
+ * @description
+ * 将传进来的VDOM进行实例化，实例化实际上就是把VDOM和真实DOM进行映射，方便操作
+ * @param {IFishtailElement} element 想要实例化的VDOM，可能是DOM节点的也可能是类组件或者函数组件
+ * @return {IFishtailInstance} element实例化后的内容
+ */
+var instantiate = function (element) {
+    var type = element.type, props = element.props;
+    if (typeof type === 'string') {
+        // HTML节点
+        var isTextELement = type === TEXT_ELEMENT_TYPE;
+        var dom_1 = isTextELement ? document.createTextNode('') : document.createElement(type);
+        updateDomProperties(dom_1, {}, props);
+        var childELements = props.children || [];
+        // 这里通过递归不断拿到下面每一层的 instance 结构，再通过后面的 append 操作生成出完整的 DOM 树
+        var childInstances = childELements.map(instantiate);
+        childInstances.forEach(function (childrenInstance) {
+            dom_1.appendChild(childrenInstance.dom);
+        });
+        return { element: element, dom: dom_1, childInstances: childInstances };
+    }
+    else if (type.prototype instanceof Component) {
+        // 类组件
+        var instance = {};
+        var publicInstance = createPublicInstance(element, instance); // 创建组件实例对象
+        var childElement = publicInstance.render(); // 执行实例上的render方法
+        var childInstance = instantiate(childElement); // 递归拿到子实例
+        var dom = childInstance.dom; // 拿到整个dom
+        Object.assign(instance, { dom: dom, element: element, childInstance: childInstance, publicInstance: publicInstance });
+        return instance;
+    }
+    else {
+        // 函数组件
+        var childElement = type(props);
+        // @ts-ignore
+        var childInstance = instantiate(childElement);
+        var dom = childInstance.dom;
+        return { dom: dom, element: element, childInstance: childInstance };
+    }
+};
+/**
+ * @description
+ * 生成类组件的对应公共实例，并且将该组件的instance数据绑定在实例上
+ * @param {IFishtailElement} element
+ */
+var createPublicInstance = function (element, internalInstance) {
+    var type = element.type, props = element.props;
+    if (typeof type !== 'string') {
+        // @ts-ignore
+        var publicInstance = new type(props);
+        publicInstance.__internalInstance = internalInstance;
+        return publicInstance;
+    }
+};
+
+var LifeCircleNameEnum;
+(function (LifeCircleNameEnum) {
+    LifeCircleNameEnum["willMount"] = "componentWillMount";
+    LifeCircleNameEnum["didMount"] = "componentDidMount";
+    LifeCircleNameEnum["receiveProps"] = "componentWillReceiveProps";
+    LifeCircleNameEnum["shouldUpdate"] = "shouldComponentUpdate";
+    LifeCircleNameEnum["willUpdate"] = "componentWillUpdate";
+    LifeCircleNameEnum["didUpdate"] = "componentDidUpdate";
+    LifeCircleNameEnum["willUnmount"] = "componentWillUnmount";
+})(LifeCircleNameEnum || (LifeCircleNameEnum = {}));
+
+/**
+ * @description
+ * 做节点更新，节点(DOM和组件)复用的基础上的DOM变化，如节点增删改，以及属性变化
+ * @param {Element | Text} parentDom 正在进行协调的节点的父容器节点
+ * @param {IFishtailInstance | null | undefined} instance 正在协调的节点的实例数据，包括相关dom信息和VDOM描述及子节点信息
+ * @param {IFishtailElement | undefined} element 正在协调节点的最新描述信息 VDOM
+ * @return {IFishtailInstance | null} 最新的节点实例数据
+ */
+var reconcile = function (parentDom, instance, element) {
+    if (instance === null || instance === undefined) {
+        if (element === undefined) {
+            return null;
+        } // <-------- 两个都没有就算了吧
+        // 新增节点，做添加
+        var newInstance = instantiate(element);
+        callClassComponentLifeCycle(newInstance, LifeCircleNameEnum.willMount);
+        parentDom.appendChild(newInstance.dom);
+        callClassComponentLifeCycle(newInstance, LifeCircleNameEnum.didMount);
+        return newInstance;
+    }
+    else if (element === undefined) {
+        // 没有最新节点，做删除
+        callClassComponentLifeCycle(instance, LifeCircleNameEnum.willUnmount);
+        parentDom.removeChild(instance.dom);
+        return null;
+    }
+    else if (instance.element.type !== element.type) {
+        // 两边不同，都存在，做替换
+        var newInstance = instantiate(element);
+        callClassComponentLifeCycle(instance, LifeCircleNameEnum.willUnmount);
+        callClassComponentLifeCycle(newInstance, LifeCircleNameEnum.willMount);
+        parentDom.replaceChild(newInstance.dom, instance.dom);
+        callClassComponentLifeCycle(newInstance, LifeCircleNameEnum.didMount);
+        return newInstance;
+    }
+    else if (typeof element.type === 'string') {
+        // 说明相同类型的type，可复用dom，继而修改原 dom 上的属性
+        updateDomProperties(instance.dom, instance.element.props, element.props);
+        instance.childInstances = reconcileChildren(instance, element);
+        // dom 已更新至最新，Fishtail element保持同步
+        instance.element = element;
+        return instance;
+    }
+    else {
+        var shouldUpdateStatus = callClassComponentLifeCycle(instance, LifeCircleNameEnum.shouldUpdate);
+        if ([false, null, '', 0].includes(shouldUpdateStatus)) {
+            return null;
+        }
+        callClassComponentLifeCycle(instance, LifeCircleNameEnum.willUpdate);
+        var childElement = void 0;
+        if (instance.publicInstance) {
+            // 这一步实际上对修改了state的组件是没变化的，但是通过state绑定给子组件prop后，通过递归执行，子组件就能拿到最新的prop了
+            instance.publicInstance.props = element.props;
+            // 拿到组件最新的 element（因为既更新过state也更新过prop），这里通过render和state的改变都会变成新的element中
+            childElement = instance.publicInstance.render();
+        }
+        else {
+            // @ts-ignore
+            childElement = element.type(element.props);
+        }
+        // 拿到过去的整个组件的子实例
+        var oldChildInstance = instance.childInstance;
+        // 对组件的前后状态做协调，最终打造新的一个 childInstance 更新，其实这里相当于把原先的rootInstance绑定在了组件自己内部
+        // 组件最终会使用HTML型的element，所以会走到其它判断里，完成修改等操作
+        var childInstance = reconcile(parentDom, oldChildInstance, childElement);
+        if (!childInstance) {
+            return null;
+        }
+        callClassComponentLifeCycle(instance, LifeCircleNameEnum.didUpdate);
+        instance.dom = childInstance.dom; // 更新dom
+        instance.childInstance = childInstance; // 更新childInstance
+        instance.element = element; // 更新element
+        return instance;
+    }
+};
+/**
+ * @description
+ * 协调更新DOM节点的子节点信息，通过拿到最新的VDOM列表和之前的进行协调对比
+ * @param {IFishtailInstance} 要更新其子节点的实例数据
+ * @param {IFishtailElement} 要更新子节点的VDOM
+ */
 var reconcileChildren = function (instance, element) {
-    var dom = instance.dom, childInstances = instance.childInstances;
+    var dom = instance.dom, _a = instance.childInstances, childInstances = _a === void 0 ? [] : _a;
     var nextChlidElements = element.props.children || [];
     var newChildInstances = [];
     var count = Math.max(childInstances.length, nextChlidElements.length);
@@ -109,6 +245,24 @@ var reconcileChildren = function (instance, element) {
         newChildInstances.push(newChildInstance);
     }
     return newChildInstances.filter(function (instance) { return instance !== null && instance !== undefined; });
+};
+
+// 保存最新的根节点Instance数据
+var rootInstance = null;
+/**
+ * @description
+ * 1. 相当于 ReactDOM.render 方法
+ * 2. 递归的把传进来的 fishtail 元素创建成真实的 DOM tree，绑定每个元素的props中事件和属性
+ * 3. 将 DOM tree 添加到 parentDom 中
+ * @param { IFishtailElement } element 一个 fishtail 元素类型
+ * @param { Element } parentDom 要渲染的目标 dom 元素
+ * @return { undefined }
+ */
+var render = function (element, parentDom) {
+    var prevInstance = rootInstance;
+    var nextInstace = reconcile(parentDom, prevInstance, element);
+    // 记录最新的 根节点 实例
+    rootInstance = nextInstace;
 };
 
 /*! *****************************************************************************
@@ -137,14 +291,6 @@ var __assign = function() {
     return __assign.apply(this, arguments);
 };
 
-function __spreadArrays() {
-    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
-    for (var r = Array(s), k = 0, i = 0; i < il; i++)
-        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
-            r[k] = a[j];
-    return r;
-}
-
 /**
  * @description
  * 相当于 React.createElement 方法
@@ -162,7 +308,9 @@ var createElement = function (type, config) {
     }
     var props = __assign({}, config);
     var finalChlidren = [];
-    __spreadArrays(childrenList).forEach(function (children) {
+    // @ts-ignore
+    var rawChildren = [].concat.apply([], childrenList);
+    rawChildren.forEach(function (children) {
         if (children !== null && children !== false && children !== undefined) {
             if (!(children instanceof Object)) {
                 children = createTextElement(children);
@@ -177,7 +325,7 @@ var createElement = function (type, config) {
  * @description
  * 当处理 JSX 时，遇到 text 文案类型时，需要特殊创建
  * @param { string | number } nodeValue 文案内容
- * @return { IFishtailElement } 最终也是返回一个 fishtaile 元素，不过是文案类型的
+ * @return { IFishtailElement } 最终也是返回一个文案类型的 fishtaile 元素
  */
 var createTextElement = function (nodeValue) {
     return createElement(TEXT_ELEMENT_TYPE, { nodeValue: nodeValue });
@@ -185,7 +333,9 @@ var createTextElement = function (nodeValue) {
 
 var Fishtail = {
     render: render,
-    createElement: createElement
+    createElement: createElement,
+    Component: Component
 };
+// 最终打包的文件引入后可通过 Fishtail 全局变量使用
 window.Fishtail = Fishtail;
 //# sourceMappingURL=bundle.cjs.js.map
