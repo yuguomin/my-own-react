@@ -4,10 +4,11 @@
 2. createElement
 3. VDOM
 4. diff
-5. component --- 正在添加中
+5. component
 6. fiber --- 正在添加中
 7. hooks --- 正在添加中
 
 详细实现过程请参阅Blog：
 [简易React实现(1)——DOM渲染与更新](https://www.yuguomin.com/2020/01/07/create-my-own-react-1/)
+[简易React实现(2)——类组件和函数组件](https://www.yuguomin.com/2020/01/11/create-my-own-react-2/)
 
